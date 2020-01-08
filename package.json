@@ -1,0 +1,27 @@
+{
+  "name": "fakezane.net",
+  "version": "0.0.1",
+  "description": "My personal site",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AnotherZane/fakezane.net.git"
+  },
+  "author": "Zane",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/AnotherZane/fakezane.net/issues"
+  },
+  "homepage": "https://fakezane.net",
+  "devDependencies": {
+    "gulp": "^4.0.2",
+    "gulp-plumber": "^1.2.1",
+    "gulp-rename": "^1.4.0",
+    "gulp-sass": "^4.0.2",
+    "gulp-terser": "^1.2.0",
+    "gulp-wait": "0.0.2"
+  }
+}
