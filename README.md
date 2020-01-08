@@ -1,2 +1,2 @@
-# GulpTemplate
-A basic gulp template.
+# fakezane.net
+My personal site
