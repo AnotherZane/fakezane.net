@@ -18,6 +18,12 @@
     z-index: -99;
 }
 
+::selection {
+    background: rgba(0,0,0,0.3);
+    text-shadow: 2px 0 1px #ff3f1a, -2px 0 1px #00a7e0;
+    color: white;
+}
+
 #background {
     background: no-repeat center center fixed; 
     background-image: url('../images/bg.gif');
