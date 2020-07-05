@@ -1,6 +1,6 @@
 {
   "name": "fakezane.net",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "My personal site",
   "main": "index.js",
   "scripts": {
@@ -11,7 +11,7 @@
     "url": "git+https://github.com/AnotherZane/fakezane.net.git"
   },
   "author": "Zane",
-  "license": "UNLICENSED",
+  "license": "MIT License",
   "bugs": {
     "url": "https://github.com/AnotherZane/fakezane.net/issues"
   },
