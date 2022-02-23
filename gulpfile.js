@@ -1,6 +1,6 @@
 // Initialize Modules
 const { src, dest, watch, series } = require("gulp");
-const sass = require("gulp-sass");
+const sass = require("gulp-sass")(require("sass"));
 const terser = require("gulp-terser");
 const plumber = require("gulp-plumber");
 const wait = require("gulp-wait");
@@ -11,7 +11,7 @@ const files = {
   scssPath: "assets/scss/styles.scss",
   jsPath: "assets/js/scripts.js",
   cssDest: "./assets/css",
-  jsDest: "./assets/js"
+  jsDest: "./assets/js",
 };
 
 // SASS
@@ -28,10 +28,10 @@ function compileJs() {
     .pipe(
       plumber(
         plumber({
-          errorHandler: function(err) {
+          errorHandler: function (err) {
             console.log(err);
             this.emit("end");
-          }
+          },
         })
       )
     )
