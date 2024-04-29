@@ -1,70 +1,103 @@
-let audioPlaying = false;
-let audio = null;
-let refreshedCount = 0;
-
-function playAudio(url) {
-  if (audioPlaying) {
-    if (audio) {
-      audio.pause();
-    }
-    audioPlaying = false;
-  } else {
-    if (!audio || audio.src != url) {
-      audio = new Audio(url);
-      audio.volume = 0.2;
-    }
-    audioPlaying = true;
-    audio.play();
-  }
-}
-
-const fetchSpotifyStatus = async () => {
-  const res = await fetch("https://now-playing.zane.workers.dev/spotify", {
-    method: "GET",
-  });
-
-  if (res.status != 200) return;
-
-  const data = await res.json();
-
+const updateSpotifyStatus = async (data) => {
   const np = document.getElementById("now-playing");
 
-  if (audioPlaying) {
-    audio.pause();
-    audioPlaying = false;
-    playAudio(data.preview_url);
+  np.innerHTML = `
+  <div id="darken">
+    <a target="__blank" href="https://open.spotify.com/track/${data.track_id}">
+      <img src="${data.album_art_url}" alt="${data.album}" />
+    </a>
+  </div>
+  <div>
+    <p>I'm listening to:</p>
+    <p><a target="__blank" href="https://open.spotify.com/track/${data.track_id}">${data.song}</a></p>
+    <p><a target="__blank" href="https://open.spotify.com/search/${data.artist}">${data.artist}</a></p>
+  </div>
+  `;
+};
+
+const updateYTMusicStatus = async (name, artist, img) => {
+  const np = document.getElementById("now-playing");
+
+  np.innerHTML = `
+  <div id="darken">
+    <a target="__blank" href="https://music.youtube.com/search?q=${name}+${artist}">  
+      <img src="${img}" alt="${artist}" /></div>
+    </a>
+  <div>
+    <p>I'm listening to:</p>
+    <p><a target="__blank" href="https://music.youtube.com/search?q=${name}+${artist}">${name}</a></p>
+    <p><a target="__blank" href="https://music.youtube.com/search?q=${artist}">${artist}</a></p>
+  </div>`;
+};
+
+const handlePresenceUpdate = (data) => {
+  let dat;
+  if (data.t == "INIT_STATE") dat = data.d["608143610415939638"];
+  else dat = data.d;
+
+  if (dat.spotify) {
+    updateSpotifyStatus(dat.spotify);
+    return;
   }
 
-  np.innerHTML =
-    '<div id="darken"><img src="' +
-    data.album.images[0].url +
-    '" alt="" onclick="playAudio(\'' +
-    data.preview_url +
-    "')\"></div>" +
-    "<div><p>I'm listening to:</p><p>" +
-    '<a href="' +
-    data.external_urls.spotify +
-    '">' +
-    data.name +
-    "</a></p><p>" +
-    data.artists
-      .map(
-        (x) =>
-          '<a class="art" href="' +
-          x.external_urls.spotify +
-          '">' +
-          x.name +
-          "</a>"
-      )
-      .join(", ") +
-    "</p></div>";
+  const ytMusic = dat.activities.filter(
+    (x) => x.application_id == "1177081335727267940"
+  );
+
+  if (ytMusic.length > 0) {
+    const img = ytMusic[0].assets.large_image.replace(
+      "mp:",
+      "https://media.discordapp.net/"
+    );
+    updateYTMusicStatus(ytMusic[0].details, ytMusic[0].state, img);
+    return;
+  }
+
+  const np = document.getElementById("now-playing");
+  np.innerHTML = "";
+};
+
+let hbInterval;
+let ws;
+
+const sendWsMessage = (op, d) => {
+  ws.send(JSON.stringify({ op, d }));
+};
+
+const handleWsMessage = (data) => {
+  switch (data.op) {
+    case 0: {
+      handlePresenceUpdate(data);
+      break;
+    }
+    case 1: {
+      sendWsMessage(2, { subscribe_to_ids: ["608143610415939638"] });
+
+      if (hbInterval) clearInterval(hbInterval);
+
+      hbInterval = setInterval(() => {
+        sendWsMessage(3, {});
+      }, data.d.heartbeat_interval);
+      break;
+    }
+    default: {
+      console.log("Lanyard sent unknown:", data);
+    }
+  }
 };
 
 window.onload = async () => {
-  await fetchSpotifyStatus();
-  const interval = setInterval(async () => {
-    await fetchSpotifyStatus();
-    refreshedCount++;
-    if (refreshedCount > 10) clearInterval(interval);
-  }, 30000);
+  ws = new WebSocket("wss://api.lanyard.rest/socket");
+  ws.onopen = () => console.log("Connected to Lanyard");
+  ws.addEventListener("message", (event) => {
+    const data = JSON.parse(event.data);
+    handleWsMessage(data);
+  });
+  ws.onclose = () => {
+    console.log("Disconnected from Lanyard");
+    clearInterval(hbInterval);
+    setTimeout(() => {
+      ws = new WebSocket("wss://api.lanyard.rest/socket");
+    }, 3000);
+  };
 };
